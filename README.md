@@ -65,6 +65,13 @@ powershell -ExecutionPolicy Bypass -File <补丁脚本路径>\patch_wcdb.ps1 -Ap
 
 完成。正常启动 WeFlow（无需改系统时间、无需 RunAsDate），日志 `%APPDATA%\WeFlow\logs\wcdb.log` 里没有 `rc=-101` 即成功；导出走 WCDB 路径，不再报 `this build has expired`。
 
+## 验证记录（2026-10-14）
+
+- 环境：Windows 11 x64，微信 4.x，WeFlow 5.0.0（本仓库源码构建）
+- **-101/-1000**：应用 wcdb 补丁后正常时间直接启动，日志零 `rc=-101`，840 联系人成功读取
+- **导出**：WeLive 引擎报 expired 后自动切换 WCDB 导出路径，**聊天记录导出正常完成** ✓
+- 构建过程零踩坑复现：干净目录 + `npm install --legacy-peer-deps` + `npm run build` + 补丁脚本，一次通过
+
 ## 已知限制
 
 - 仅 Windows。时间锁只存在于 Windows 版 `wcdb_api.dll`
