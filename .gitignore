@@ -1,0 +1,6 @@
+node_modules/
+release2/
+dist/
+dist-electron/
+*.local
+forwarder.log
