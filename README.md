@@ -69,9 +69,64 @@ powershell -ExecutionPolicy Bypass -File <补丁脚本路径>\patch_wcdb.ps1 -Ap
 
 完成。正常启动 WeFlow（无需改系统时间、无需 RunAsDate），日志 `%APPDATA%\WeFlow\logs\wcdb.log` 里没有 `rc=-101` 即成功；导出走 WCDB 路径，不再报 `this build has expired`。
 
-## 验证记录（2026-10-14）
+## 最新源码版（Upstream Build，2026-10-15 新增）
+
+基于 [hicccc77/WeFlow](https://github.com/hicccc77/WeFlow) **main 分支最新代码**的构建（含上游新增的 AI Agent 子系统与组件外置架构），叠加本仓库全部修复。对应 Release：`v5.0.0-upstream.1`。
+
+### 与 5.0.0 社区版的区别
+
+| | 5.0.0 社区版（本仓库主体） | 最新源码版（upstream build） |
+|---|---|---|
+| 代码基线 | 5.0.0 完整分发 + Community hotfix | 上游 main 最新（AI Agent 子系统、组件外置架构） |
+| 时间锁 | DLL 7 字节补丁 | 同款补丁（组件路径指向补丁 DLL） |
+| 导出 | Community hotfix fallback | fallback 逻辑已移植（源码级，见 `patches/weflow-upstream-latest-fixes.patch`） |
+| 图片 | Community hotfix | **新增 WXGF 支持**：微信 4.0 新格式图片（wxgf 容器）JS 兜底识别 + HEVC/ffmpeg 解码 |
+| 新功能 | — | AI Agent、灵感箱（上游新增，未经充分验证） |
+
+### 最新源码版的组件配置（首次启动前）
+
+最新源码采用**组件外置架构**，需要在配置文件（`%APPDATA%\WeFlow\WeFlow-config.json`）中指定四个组件路径（也可在「设置 → 数据库」界面配置）：
+
+| 字段 | 指向 | 说明 |
+|------|------|------|
+| `wcdbLibPath` | `resources\resources\wcdb\win32\x64\wcdb_api.dll`（**需先用补丁脚本去时间锁**） | 数据库组件 |
+| `welivePath` | `resources\resources\welive\win32\x64\welive.exe` | 导出引擎（**带过期锁，导出时会自动 fallback 到内置 WCDB 引擎**，无需处理） |
+| `imageNativeAddonPath` | `resources\resources\wedecrypt\win32\x64\weflow-image-native-win32-x64.node` | 图片解密插件 |
+| `keyProviderPath` | 任意实现 keyProvider 协议的可执行文件（NDJSON） | 密钥提取；**Portable 版已内置桥接脚本**（DPAPI 解密 + Rust CLI 双路） |
+
+**推荐直接使用 Portable zip**（组件路径已全部预配置，解压即用）。
+
+### 最新源码版的构建
+
+```powershell
+# 依赖（peer 冲突 + 缺失 peer 需手动补）
+npm install --legacy-peer-deps
+npm install @lobehub/ui antd --legacy-peer-deps
+
+# 构建（产物在 release2\win-unpacked\）
+# 注意：必须带两个镜像变量，且构建前关闭 WeFlow
+$env:ELECTRON_MIRROR="https://npmmirror.com/mirrors/electron/"
+$env:ELECTRON_BUILDER_BINARIES_MIRROR="https://npmmirror.com/mirrors/electron-builder-binaries/"
+npm run build
+
+# 构建后两个补丁（见 patches/ 目录）
+# 1. wcdb_api.dll 去时间锁
+.\patches\patch_wcdb.ps1 -AppDir "<本目录>\release2\win-unpacked"
+# 2. app.asar keyProvider 支持（.cjs 脚本 provider）
+node ..\patch-app-asar.cjs "<本目录>\release2\win-unpacked\resources"
+```
+
+### 已知事项（最新源码版）
+
+- 视频：微信按需下载——**未在微信里播放过的视频只有封面**（本体不在本地），在微信里点开播放后 WeFlow 即可查看
+- 部分图片若仍失败：启动日志（`logEnabled: true`）会记录 native 插件加载的真实错误，欢迎反馈
+- 上游版本号未变（仍为 5.0.0），实际代码为上游 main 分支最新（含 AI Agent 子系统）
+
+
 
 - 环境：Windows 11 x64，微信 4.x，WeFlow 5.0.0（本仓库源码构建）
+## 验证记录（2026-10-14）
+
 - **-101/-1000**：应用 wcdb 补丁后正常时间直接启动，日志零 `rc=-101`，840 联系人成功读取
 - **导出**：WeLive 引擎报 expired 后自动切换 WCDB 导出路径，**聊天记录导出正常完成** ✓
 - 构建过程零踩坑复现：干净目录 + `npm install --legacy-peer-deps` + `npm run build` + 补丁脚本，一次通过
