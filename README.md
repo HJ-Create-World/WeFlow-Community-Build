@@ -73,6 +73,10 @@ powershell -ExecutionPolicy Bypass -File <补丁脚本路径>\patch_wcdb.ps1 -Ap
 
 基于 [hicccc77/WeFlow](https://github.com/hicccc77/WeFlow) **main 分支最新代码**的构建（含上游新增的 AI Agent 子系统与组件外置架构），叠加本仓库全部修复。对应 Release：`v5.0.0-upstream.1`。
 
+> **下载**：[WeFlow-5.0.0-Upstream-Portable.zip（推荐，全补丁预配置）](https://github.com/HJ-Create-World/WeFlow-Community-Build/releases/tag/v5.0.0-upstream.1) / Upstream-Setup.exe（需自跑补丁）
+>
+> **与稳定版怎么选**：日常使用选 [v5.0.0-community.1 稳定版](https://github.com/HJ-Create-World/WeFlow-Community-Build/releases/tag/v5.0.0-community.1)（验证最充分）；想体验上游新功能（AI Agent 等）或需要 WXGF 图片支持就用本版。两版可并存。
+
 ### 与 5.0.0 社区版的区别
 
 | | 5.0.0 社区版（本仓库主体） | 最新源码版（upstream build） |
